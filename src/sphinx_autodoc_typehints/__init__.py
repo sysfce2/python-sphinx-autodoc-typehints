@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, AnyStr, ForwardRef, NewType, TypeVar, get_type_hints
 
 from docutils import nodes
-from docutils.frontend import OptionParser
+from docutils.frontend import get_default_settings
 from sphinx.ext.autodoc.mock import mock
 from sphinx.parsers import RSTParser
 from sphinx.util import logging, rst
@@ -417,14 +417,14 @@ def _is_dataclass(name: str, what: str, qualname: str) -> bool:
 
 
 def _future_annotations_imported(obj: Any) -> bool:
-    _annotations = getattr(inspect.getmodule(obj), "annotations", None)
-    if _annotations is None:
+    annotations_ = getattr(inspect.getmodule(obj), "annotations", None)
+    if annotations_ is None:
         return False
 
     # Make sure that annotations is imported from __future__ - defined in cpython/Lib/__future__.py
     # annotations become strings at runtime
     future_annotations = 0x100000 if sys.version_info[0:2] == (3, 7) else 0x1000000
-    return bool(_annotations.compiler_flag == future_annotations)
+    return bool(annotations_.compiler_flag == future_annotations)
 
 
 def get_all_type_hints(
@@ -849,7 +849,7 @@ def get_insert_index(app: Sphinx, lines: list[str]) -> InsertIndexInfo | None:
 
     # 3. Insert after the parameters.
     # To find the parameters, parse as a docutils tree.
-    settings = OptionParser(components=(RSTParser,)).get_default_values()
+    settings = get_default_settings(RSTParser)
     settings.env = app.env
     doc = parse("\n".join(lines), settings)
 
